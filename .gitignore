@@ -1,0 +1,9 @@
+*.py[cd]
+*.d
+*.so
+*.log
+*.out
+*.pdf
+*.root
+*.png
+*~
