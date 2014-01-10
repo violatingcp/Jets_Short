@@ -1,4 +1,4 @@
-// Template class: JetPlotsExample
+// Template class: MetPlotsExample
 // Description:  Example of simple EDAnalyzer for jets.
 // Author: K. Kousouris
 // Date:  25 - August - 2008
@@ -10,15 +10,14 @@
 #include <vector>
 #include <map>
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-#include "FWCore/Utilities/interface/InputTag.h"
 
-template<class Jet>
-class JetPlotsExample : public edm::EDAnalyzer 
+template<class MET>
+class METPlotsExample : public edm::EDAnalyzer 
    {
      public:
-       JetPlotsExample(edm::ParameterSet const& cfg);
+       METPlotsExample(edm::ParameterSet const& cfg);
      private:
-       typedef std::vector<Jet> JetCollection;
+       typedef std::vector<MET> METCollection;
        void FillHist1D(const TString& histName, const Double_t& x);
        void beginJob();
        void analyze(edm::Event const& e, edm::EventSetup const& iSetup);
@@ -26,17 +25,13 @@ class JetPlotsExample : public edm::EDAnalyzer
        std::map<TString, TH1*> m_HistNames1D;  
        TFile* m_file;
        /////// Configurable parameters /////////////////////////////////////
-       /////// Jet algorithm: it can be any Calo, Gen or PF algorithm //////
-       std::string JetAlgorithm;
-       /////// PU Jet Id  //////
-       edm::InputTag  PUJetIdDisc;
-       edm::InputTag  PUJetId;
+       /////// MET algorithm: it can be any  PF Gen algorithm //////
+       std::string METAlgorithm;
+       /////// Leptons to determine the Recoil                //////
+       std::string recoilLeptons;
+       /////// use leptons to determint the recoil            //////
+       bool useRecoil;
        /////// Histogram where the plots are stored //////////////////////// 
        std::string HistoFileName;
-       /////// Number of jets used for the plots /////////////////////////// 
-       int NJets;    
-       /////// Jet correction levels used for the plots /////////////////////////// 
-       bool        useJecLevels;
-       std::string jecLevels;
    };
 #endif

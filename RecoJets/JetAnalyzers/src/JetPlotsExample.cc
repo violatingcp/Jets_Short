@@ -4,6 +4,7 @@
 // Date:  25 - August - 2008
 #include "RecoJets/JetAnalyzers/interface/JetPlotsExample.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/JetReco/interface/CaloJetCollection.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
@@ -24,6 +25,8 @@ JetPlotsExample<Jet>::JetPlotsExample(edm::ParameterSet const& cfg)
   HistoFileName = cfg.getParameter<std::string> ("HistoFileName");
   NJets         = cfg.getParameter<int> ("NJets");
   useJecLevels  = cfg.exists("jecLevels");
+  PUJetIdDisc   = cfg.getParameter<edm::InputTag> ("PUJetDiscriminant"); 
+  PUJetId       = cfg.getParameter<edm::InputTag> ("PUJetId"); 
   if ( useJecLevels )
     jecLevels     = cfg.getParameter<std::string> ("jecLevels");
 }
@@ -54,6 +57,10 @@ void JetPlotsExample<Jet>::beginJob()
   m_HistNames1D[hname] = new TH1F(hname,hname,100,0,1); 
   hname = "MuonEnergyFraction";
   m_HistNames1D[hname] = new TH1F(hname,hname,100,0,1); 
+  hname = "PUDiscriminant";
+  m_HistNames1D[hname] = new TH1F(hname,hname,100,-1,1); 
+  hname = "PUId";
+  m_HistNames1D[hname] = new TH1F(hname,hname,10,0,10); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 template<class Jet>
@@ -63,6 +70,19 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
   //Handle<JetCollection> jets;
    edm::Handle<edm::View<reco::Jet> > jets;
   evt.getByLabel(JetAlgorithm,jets);
+
+  /////////// Get pu jet id map //////////////////////
+  //Handle<JetCollection> jets;
+  edm::Handle<edm::ValueMap<float> > PUJetIdMVA;
+  edm::Handle<edm::ValueMap<int> >   PUJetIdFlag;
+  if(PUJetIdDisc.label().size() != 0 && PUJetId.label().size() != 0) { 
+    evt.getByLabel(PUJetIdDisc,PUJetIdMVA);
+    evt.getByLabel(PUJetId    ,PUJetIdFlag);
+  }
+  /////////// Get Muons for Cleaning ////////////
+  edm::Handle<CandidateView> leptons;
+  evt.getByLabel("muons", leptons);
+
   // typename JetCollection::const_iterator i_jet;
   int index = 0;
   TString hname; 
@@ -70,9 +90,16 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
   hname = "NumberOfJets";
   FillHist1D(hname,jets->size()); 
   /////////// Fill Histograms for the leading NJet jets ///
- 
   edm::View<reco::Jet>::const_iterator i_jet, endpjets = jets->end(); 
-   for (i_jet = jets->begin();  i_jet != endpjets && index < NJets;  ++i_jet) {
+  for (i_jet = jets->begin();  i_jet != endpjets && index < NJets;  ++i_jet) {
+    bool pIsClean = true;
+    //Remove all jets near a muon
+    for ( CandidateView::const_iterator lepton = leptons->begin();
+	   lepton != leptons->end(); ++lepton ) {
+      if(lepton->pt() < 5.) continue;
+      if(deltaR(i_jet->eta(),i_jet->phi(),lepton->eta(),lepton->phi()) < 0.5) pIsClean = false;
+    }
+    if(!pIsClean) continue;
 
       double jecFactor = 1.0;
       double chf = 0.0;
@@ -80,18 +107,17 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
       double pef = 0.0;
       double eef = 0.0;
       double mef = 0;
- 
+
       edm::Ptr<reco::Jet> ptrToJet = jets->ptrAt( i_jet - jets->begin() );
       if ( ptrToJet.isNonnull() && ptrToJet.isAvailable() ) {
-	pat::Jet const * patJet = dynamic_cast<pat::Jet const *>( ptrToJet.get() );
-	if ( patJet != 0 && patJet->isPFJet()) {
-
-	  chf = patJet->chargedHadronEnergyFraction();
-	  nhf = patJet->neutralHadronEnergyFraction();
-	  pef = patJet->photonEnergyFraction();
-	  eef = patJet->electronEnergy() / patJet->energy();
-	  mef = patJet->muonEnergyFraction();
-	  if ( useJecLevels ) jecFactor = patJet->jecFactor( jecLevels );
+	reco::PFJet const * pfJet = dynamic_cast<reco::PFJet const *>( ptrToJet.get() );
+	if ( pfJet != 0) { 
+	  chf = pfJet->chargedHadronEnergyFraction();
+	  nhf = pfJet->neutralHadronEnergyFraction();
+	  pef = pfJet->photonEnergyFraction();
+	  eef = pfJet->electronEnergy() / pfJet->energy();
+	  mef = pfJet->muonEnergyFraction();
+	  //if ( useJecLevels ) jecFactor = pfJet->jecFactor( jecLevels );
 	}
       }
 
@@ -113,7 +139,15 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
       FillHist1D(hname, eef);  
       hname = "MuonEnergyFraction";
       FillHist1D(hname, mef);  
- 
+      //PU Jet Id
+      if(PUJetIdDisc.label().size() != 0 && PUJetId.label().size() != 0) { 
+	float mva     = (*PUJetIdMVA) [ptrToJet];
+	int    idflag = (*PUJetIdFlag)[ptrToJet];
+	hname = "PUDiscriminant";
+	FillHist1D(hname, mva);  
+	hname = "PUId";
+	FillHist1D(hname, idflag);  
+      }
       index++;
     }
 }
