@@ -1,0 +1,17 @@
+  <use   name="RecoJets/JetProducers"/>
+  <use   name="RecoJets/JetAlgorithms"/>
+  <use   name="FWCore/Framework"/>
+  <use   name="DataFormats/JetReco"/>
+  <use   name="DataFormats/VertexReco"/>
+  <use   name="Geometry/CaloGeometry"/>
+  <use   name="Geometry/Records"/>
+  <use   name="CommonTools/UtilAlgos"/>
+  <use   name="CondFormats/JetMETObjects"/>
+  <use   name="JetMETCorrections/Objects"/>
+  <use   name="fastjet"/>
+  <library   file="*.cc" name="RecoJetsJetProducers_plugins">
+    <flags EDM_PLUGIN="1"/>
+</library>
+
+<export>
+</export>
