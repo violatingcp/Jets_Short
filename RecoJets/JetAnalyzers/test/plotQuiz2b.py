@@ -87,3 +87,4 @@ for ihist in hists:
     c = TCanvas('c' + ihist, 'c' + ihist)
     hs.Draw('nostack')
     canvs.append(c)
+    c.SaveAs('c'+ihist+'.png')    

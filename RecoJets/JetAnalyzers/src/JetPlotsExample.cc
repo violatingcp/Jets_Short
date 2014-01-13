@@ -10,6 +10,7 @@
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 #include "DataFormats/JetReco/interface/JPTJetCollection.h"
+#include "DataFormats/JetReco/interface/PileupJetIdentifier.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include <TFile.h>
@@ -24,6 +25,7 @@ JetPlotsExample<Jet>::JetPlotsExample(edm::ParameterSet const& cfg)
   JetAlgorithm  = cfg.getParameter<std::string> ("JetAlgorithm"); 
   HistoFileName = cfg.getParameter<std::string> ("HistoFileName");
   NJets         = cfg.getParameter<int> ("NJets");
+  JetPtMin      = cfg.getParameter<double> ("JetPtMin");
   useJecLevels  = cfg.exists("jecLevels");
   PUJetIdDisc   = cfg.getParameter<edm::InputTag> ("PUJetDiscriminant"); 
   PUJetId       = cfg.getParameter<edm::InputTag> ("PUJetId"); 
@@ -92,6 +94,7 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
   /////////// Fill Histograms for the leading NJet jets ///
   edm::View<reco::Jet>::const_iterator i_jet, endpjets = jets->end(); 
   for (i_jet = jets->begin();  i_jet != endpjets && index < NJets;  ++i_jet) {
+    if(i_jet->pt() < JetPtMin) continue;
     bool pIsClean = true;
     //Remove all jets near a muon
     for ( CandidateView::const_iterator lepton = leptons->begin();
@@ -100,56 +103,61 @@ void JetPlotsExample<Jet>::analyze(edm::Event const& evt, edm::EventSetup const&
       if(deltaR(i_jet->eta(),i_jet->phi(),lepton->eta(),lepton->phi()) < 0.5) pIsClean = false;
     }
     if(!pIsClean) continue;
-
-      double jecFactor = 1.0;
-      double chf = 0.0;
-      double nhf = 0.0;
-      double pef = 0.0;
-      double eef = 0.0;
-      double mef = 0;
-
-      edm::Ptr<reco::Jet> ptrToJet = jets->ptrAt( i_jet - jets->begin() );
-      if ( ptrToJet.isNonnull() && ptrToJet.isAvailable() ) {
-	reco::PFJet const * pfJet = dynamic_cast<reco::PFJet const *>( ptrToJet.get() );
-	if ( pfJet != 0) { 
-	  chf = pfJet->chargedHadronEnergyFraction();
-	  nhf = pfJet->neutralHadronEnergyFraction();
-	  pef = pfJet->photonEnergyFraction();
-	  eef = pfJet->electronEnergy() / pfJet->energy();
-	  mef = pfJet->muonEnergyFraction();
-	  //if ( useJecLevels ) jecFactor = pfJet->jecFactor( jecLevels );
-	}
+    index++;
+    double jecFactor = 1.0;
+    double chf = 0.0;
+    double nhf = 0.0;
+    double pef = 0.0;
+    double eef = 0.0;
+    double mef = 0;
+    
+    edm::Ptr<reco::Jet> ptrToJet = jets->ptrAt( i_jet - jets->begin() );
+    if ( ptrToJet.isNonnull() && ptrToJet.isAvailable() ) {
+      reco::PFJet const * pfJet = dynamic_cast<reco::PFJet const *>( ptrToJet.get() );
+      if ( pfJet != 0) { 
+	chf = pfJet->chargedHadronEnergyFraction();
+	nhf = pfJet->neutralHadronEnergyFraction();
+	pef = pfJet->photonEnergyFraction();
+	eef = pfJet->electronEnergy() / pfJet->energy();
+	mef = pfJet->muonEnergyFraction();
+	//if ( useJecLevels ) jecFactor = pfJet->jecFactor( jecLevels );
       }
-
-      hname = "JetPt";
-      FillHist1D(hname,(*i_jet).pt() * jecFactor );   
-      hname = "JetEta";
-      FillHist1D(hname,(*i_jet).eta());
-      hname = "JetPhi";
-      FillHist1D(hname,(*i_jet).phi());
-      hname = "JetArea";
-      FillHist1D(hname,(*i_jet).jetArea());
-      hname = "ChargedHadronEnergyFraction";
-      FillHist1D(hname, chf) ;
-      hname = "NeutralHadronEnergyFraction";
-      FillHist1D(hname, nhf);
-      hname = "PhotonEnergyFraction";
-      FillHist1D(hname, pef);
-      hname = "ElectronEnergyFraction";
-      FillHist1D(hname, eef);  
-      hname = "MuonEnergyFraction";
-      FillHist1D(hname, mef);  
-      //PU Jet Id
-      if(PUJetIdDisc.label().size() != 0 && PUJetId.label().size() != 0) { 
-	float mva     = (*PUJetIdMVA) [ptrToJet];
-	int    idflag = (*PUJetIdFlag)[ptrToJet];
+      }
+    bool passPU = true;
+    float mva     = 0;
+    int   idflag  = 0;
+    if(PUJetIdDisc.label().size() != 0 && PUJetId.label().size() != 0) { 
+      mva     = (*PUJetIdMVA) [ptrToJet];
+      idflag = (*PUJetIdFlag)[ptrToJet];
+      if(! PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose )) passPU  = false;
+      }
+    if(!passPU) continue;
+    hname = "JetPt";
+    FillHist1D(hname,(*i_jet).pt() * jecFactor );   
+    hname = "JetEta";
+    FillHist1D(hname,(*i_jet).eta());
+    hname = "JetPhi";
+    FillHist1D(hname,(*i_jet).phi());
+    hname = "JetArea";
+    FillHist1D(hname,(*i_jet).jetArea());
+    hname = "ChargedHadronEnergyFraction";
+    FillHist1D(hname, chf) ;
+    hname = "NeutralHadronEnergyFraction";
+    FillHist1D(hname, nhf);
+    hname = "PhotonEnergyFraction";
+    FillHist1D(hname, pef);
+    hname = "ElectronEnergyFraction";
+    FillHist1D(hname, eef);  
+    hname = "MuonEnergyFraction";
+    FillHist1D(hname, mef);  
+    //PU Jet Id
+    if(PUJetIdDisc.label().size() != 0 && PUJetId.label().size() != 0) { 
 	hname = "PUDiscriminant";
 	FillHist1D(hname, mva);  
 	hname = "PUId";
 	FillHist1D(hname, idflag);  
-      }
-      index++;
     }
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 template<class Jet>

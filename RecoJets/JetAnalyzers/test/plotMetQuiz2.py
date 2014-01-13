@@ -17,12 +17,12 @@ from optparse import OptionParser
 parser = OptionParser()
 
 parser.add_option('--inputFile1', metavar='F', type='string', action='store',
-                  default='PFMetPlotsExample_Data.root',
+                  default='PFMetPlotsExample_MC.root',
                   dest='inputFile1',
                   help='Input file 1')
 
 parser.add_option('--inputFile2', metavar='F', type='string', action='store',
-                  default='PFMetMVAPlotsExample_Data.root',
+                  default='CaloMetPlotsExample_MC.root',
                   dest='inputFile2',
                   help='Input file 2')
 
@@ -50,15 +50,15 @@ f2 = TFile(options.inputFile2)
 
 
 hists = [
-    'MET'	
-#    'METPhi',
-#    'METX',	
-#    'METY',
-#    'SumEt',
-#    'UPara',
-#    'UPerp',
-#    'UParaPlusPt',
-#    'Response',
+    'MET',	
+    'METX',
+    'METY',	
+    'METPhi',
+    'UPara',
+    'UPerp',
+    'sumEt',
+    'UParaPlusPt',
+    'Response'
     ]
 
 outhists = []
@@ -82,15 +82,9 @@ for ihist in hists:
 
     hs.Add( h2, 'hist' )
     hs.Add( h1, 'hist' )
-    lL = TLegend(0.5,0.5,0.9,0.9)
-    lL.SetFillColor(0)
-    lL.SetBorderSize(0)
-    lL.AddEntry(h1,'PF Met','lf')
-    lL.AddEntry(h2,'MVA Met','lf')
+    print "Mean file 1:",h1.GetMean(),"Mean file 2:",h2.GetMean()
 
     c = TCanvas('c' + ihist, 'c' + ihist)
     hs.Draw('nostack')
-    lL.Draw('lp')
     canvs.append(c)
-    c.SaveAs("test.png")
-    
+    #c.SaveAs('c'+ihist+'.png')

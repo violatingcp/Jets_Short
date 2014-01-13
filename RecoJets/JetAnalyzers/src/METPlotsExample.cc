@@ -29,21 +29,21 @@ void METPlotsExample<MET>::beginJob()
   hname = "MET";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,0,200);
   hname = "METPhi";
-  m_HistNames1D[hname] = new TH1F(hname,hname,120,-M_PI,M_PI);
+  m_HistNames1D[hname] = new TH1F(hname,hname,40,-M_PI,M_PI);
   hname = "METX";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
   hname = "METY";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
   hname = "sumEt";
-  m_HistNames1D[hname] = new TH1F(hname,hname,100,0,3000);
+  m_HistNames1D[hname] = new TH1F(hname,hname,50,0,3000);
   hname = "UPara";
-  m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,200);
+  m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,200);
   hname = "UPerp";
-  m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
+  m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,100);
   hname = "UParaPlusPt";
-  m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
+  m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,100);
   hname = "Response";
-  m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
+  m_HistNames1D[hname] = new TH1F(hname,hname,10,-0.5,2);
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 template<class MET>
@@ -80,7 +80,6 @@ void METPlotsExample<MET>::analyze(edm::Event const& evt, edm::EventSetup const&
     }
     if(massId1 > -1) recoil+=leptonVecs[massId1];
     if(massId2 > -1) recoil+=leptonVecs[massId2];
-    std::cout << "===> test " << leptonVecs.size() << " --" << recoil.M() << " -- " << recoil.Pt() << std::endl;
   }
   int index = 0;
   TString hname; 
@@ -100,15 +99,17 @@ void METPlotsExample<MET>::analyze(edm::Event const& evt, edm::EventSetup const&
     TLorentzVector pU;
     pU.SetPtEtaPhiM(i_met->pt(),0.,i_met->phi(),0.);
     pU+=recoil;
-    double deltaPhi = fabs(recoil.Phi()-pU.Phi()); if(deltaPhi > 2.*M_PI-deltaPhi) deltaPhi = 2.*M_PI-deltaPhi;
+    double deltaPhi = (recoil.Phi()-pU.Phi()); 
+    if(deltaPhi >  M_PI) deltaPhi -= 2.*M_PI;
+    if(deltaPhi < -M_PI) deltaPhi += 2.*M_PI;
     hname = "UPara";
     FillHist1D(hname,pU.Pt()*cos(deltaPhi));
     hname = "UPerp";
     FillHist1D(hname,pU.Pt()*sin(deltaPhi));
     hname = "UParaPlusPt";
-    FillHist1D(hname,pU.Pt()*cos(deltaPhi)+recoil.Pt());
+    FillHist1D(hname,pU.Pt()*cos(deltaPhi)-recoil.Pt());
     hname = "Response";
-    FillHist1D(hname,(pU.Pt()*cos(deltaPhi)+recoil.Pt())/recoil.Pt());
+    if(recoil.Pt() > 40) FillHist1D(hname,(pU.Pt()*cos(deltaPhi)/recoil.Pt()));
     index++;
   }
 }

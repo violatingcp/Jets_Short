@@ -14,8 +14,8 @@ import FWCore.ParameterSet.Config as cms
 ## | |_| | (_| | || (_| | | (_) | |    | |  | | |___ 
 ## |____/ \__,_|\__\__,_|  \___/|_|    |_|  |_|\____|
             
-isMC = False
-#isMC = True
+#isMC = False
+isMC = True
 
 ##   ____             __ _                       _     _           
 ##  / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |__ | | ___  ___ 
@@ -25,9 +25,11 @@ isMC = False
 ##                         |___/                                   
 
 NJetsToKeep = 2
+JetPtMin    = 0
+UseCHS=''
+#UseCHS='CHS'
 CaloJetCollection = 'ak5CaloJets'
-#PFJetCollection   = 'ak5PFJets'
-PFJetCollection   = 'ak5PFJets'
+PFJetCollection   = 'ak5PFJets'+UseCHS
 PFJetCollectionCorr   = 'ak5PFJetsCorr'
 JPTJetCollection  = 'JetPlusTrackZSPCorJetAntiKt5'
 GenJetCollection  = 'ak5GenJets'
@@ -38,13 +40,12 @@ CAPrunedJetCollection  = "caPrunedPFlow"
 GenJetCollection       = "ak5GenJetsNoNu"
 JetCorrection          = "ak5PFL1FastL2L3"
 
-PlotSuffix = "_Data"
+PlotSuffix = "_Data"+UseCHS
 inputFile = 'file:output.root'
 
 if isMC:
-  PlotSuffix = "_MC"
+  PlotSuffix = "_MC"+UseCHS
   inputFile ='file:output.root'
-  #ttbsm_52x_mc_128_1_lmR.root'
 
 if not isMC:
   JetCorrection += "Residual"
@@ -110,6 +111,7 @@ process.tightPFJetsPFlow = cms.EDFilter("PFJetIDSelectionFunctorBasicFilter",
 process.load("RecoJets.JetProducers.PileupJetID_cfi")
 process.pileupJetIdProducer.jets     = PFJetCollectionCorr
 process.pileupJetIdProducer.vertexes = "goodOfflinePrimaryVertices"
+process.pileupJetIdProducer.residualsTxt  = cms.FileInPath("RecoJets/JetProducers/data/mva_JetID_v1.weights.xml")
 ##  ____  _       _       
 ## |  _ \| | ___ | |_ ___ 
 ## | |_) | |/ _ \| __/ __|
@@ -122,15 +124,26 @@ process.calo = cms.EDAnalyzer("CaloJetPlotsExample",
     HistoFileName = cms.string('CaloJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
-    PUJetId           = cms.InputTag("")                          
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 #############   PF Jets    ###########################
 process.pf = cms.EDAnalyzer("PFJetPlotsExample",
     JetAlgorithm  = cms.string(PFJetCollectionCorr),
     HistoFileName = cms.string('PFJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
+    PUJetDiscriminant = cms.InputTag(""),
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin)                          
+)
+#############   PF Jets w/PUJet Id   ###########################
+process.pfpuid = cms.EDAnalyzer("PFJetPlotsExample",
+    JetAlgorithm  = cms.string(PFJetCollectionCorr),
+    HistoFileName = cms.string('PFJetPlotsPUIdExample'+PlotSuffix+'.root'),
+    NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag("pileupJetIdProducer","fullDiscriminant"),
-    PUJetId           = cms.InputTag("pileupJetIdProducer","fullId")                          
+    PUJetId           = cms.InputTag("pileupJetIdProducer","fullId"),
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 #############   PF Jets, Tight Jet ID  ################
 process.pfTight = cms.EDAnalyzer("PFJetPlotsExample",
@@ -139,6 +152,7 @@ process.pfTight = cms.EDAnalyzer("PFJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),#pileupJetIdProducer","fullDiscriminant"),
     PUJetId           = cms.InputTag(""),#pileupJetIdProducer","fullId")                          
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 
 #############   PF Jets, No Corrections    ###########
@@ -148,8 +162,10 @@ process.pfUncorr = cms.EDAnalyzer("PFJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     jecLevels     = cms.string("Uncorrected"),
     PUJetDiscriminant = cms.InputTag(""),#pileupJetIdProducer","fullDiscriminant"),
-    PUJetId           = cms.InputTag(""),#pileupJetIdProducer","fullId")                          
+    PUJetId           = cms.InputTag(""),#pileupJetIdProducer","fullId")
+    JetPtMin          = cms.double(JetPtMin)                                                            
 )
+
 
 
 #############   JPT Jets    ###########################
@@ -158,7 +174,8 @@ process.jpt = cms.EDAnalyzer("JPTJetPlotsExample",
     HistoFileName = cms.string('JPTJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
-    PUJetId           = cms.InputTag("")                          
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 #############   Gen Jets   ###########################
 process.gen = cms.EDAnalyzer("GenJetPlotsExample",
@@ -166,7 +183,8 @@ process.gen = cms.EDAnalyzer("GenJetPlotsExample",
      HistoFileName = cms.string('GenJetPlotsExample'+PlotSuffix+'.root'),
      NJets         = cms.int32(NJetsToKeep),
      PUJetDiscriminant = cms.InputTag(""),
-     PUJetId           = cms.InputTag("")                          
+     PUJetId           = cms.InputTag(""),
+     JetPtMin          = cms.double(JetPtMin)                          
 )
 
 #############   Cambridge-Aachen Jets R=0.8 ###########################
@@ -175,7 +193,8 @@ process.ca = cms.EDAnalyzer("PFJetPlotsExample",
     HistoFileName = cms.string('CAJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
-    PUJetId           = cms.InputTag("")                          
+    PUJetId           = cms.InputTag(""),                          
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 
 
@@ -185,7 +204,8 @@ process.caPruned = cms.EDAnalyzer("PFJetPlotsExample",
     HistoFileName = cms.string('CAPrunedJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
-    PUJetId           = cms.InputTag("")                                                            
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin)                          
 )
 
 ##   _   _        _     
@@ -194,21 +214,36 @@ process.caPruned = cms.EDAnalyzer("PFJetPlotsExample",
 ##  |     ||  __/| |_   
 ##  |_/\/\| \___|\___|  
 ##
+#Pileup Reduced MET
+#Load the conditions (needed for the JEC applied inside the MVA Met)
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('JetMETCorrections.Configuration.JetCorrectionProducers_cff')
 process.GlobalTag.globaltag = 'START53_V22::All'
-process.load('JetMETCorrections.METPUSubtraction.mvaPFMET_leptons_cff')
-process.load('JetMETCorrections.METPUSubtraction.noPileUpPFMET_cff')
+#Load teh MVA Met
+process.load('RecoMET.METPUSubtraction.mvaPFMET_leptons_cff')
+process.load('RecoMET.METPUSubtraction.noPileUpPFMET_cff')
 
-#process.load("JetMETCorrections.Type1MET.correctionTermsPfMetType1Type2_cff")
-#process.load("JetMETCorrections.Type1MET.correctedMet_cff")
-#process.corrPfMetType1.jetCorrLabel = cms.string(JetCorrection)
+#Specify the leptons
+process.pfMEtMVA.srcLeptons =  cms.VInputTag("isomuons")#,"isoelectrons","isotaus")
 
-#############   PFMET ############
+#Type1 Corrections
+process.load("JetMETCorrections.Type1MET.correctionTermsPfMetType1Type2_cff")
+process.load("JetMETCorrections.Type1MET.correctedMet_cff")
+process.corrPfMetType1.jetCorrLabel = cms.string(JetCorrection)
+
+#MET Filters
+process.load("RecoMET.METFilters.metFilters_cff")
+#Special Set of MET filters that will work with the dataset (THIS IS NOT ALL OF THE FILTERS!!!!!)
+#See Here for all https://cmssdt.cern.ch/SDT/lxr/source/RecoMET/METFilters/python/metFilters_cff.py
+process.MetFilter = cms.Sequence(process.hcalLaserEventFilter *
+                                 process.goodVertices * process.trackingFailureFilter )
+
+
+#############   caloMET ############
 process.caloMet = cms.EDAnalyzer("CaloMETPlotsExample",
     MetAlgorithm  = cms.string("corMetGlobalMuons"),
     HistoFileName = cms.string('CaloMetPlotsExample'+PlotSuffix+'.root'),
-    useRecoil     = cms.bool(False),
+    useRecoil     = cms.bool(True),
     recoilLeptons = cms.string("isomuons")                           
 )
 
@@ -216,7 +251,7 @@ process.caloMet = cms.EDAnalyzer("CaloMETPlotsExample",
 process.PFMet = cms.EDAnalyzer("PFMETPlotsExample",
     MetAlgorithm  = cms.string("pfMet"),
     HistoFileName = cms.string('PFMetPlotsExample'+PlotSuffix+'.root'),
-    useRecoil     = cms.bool(False),
+    useRecoil     = cms.bool(True),
     recoilLeptons = cms.string("isomuons")                           
 )
 
@@ -224,15 +259,23 @@ process.PFMet = cms.EDAnalyzer("PFMETPlotsExample",
 process.NoPUMet = cms.EDAnalyzer("PFMETPlotsExample",
     MetAlgorithm  = cms.string("pfMEtNoPU"),
     HistoFileName = cms.string('PFMetNoPUPlotsExample'+PlotSuffix+'.root'),
-    useRecoil     = cms.bool(False),
+    useRecoil     = cms.bool(True),
     recoilLeptons = cms.string("isomuons")                           
 )
 
 #############   MVAMET ############
 process.MVAMet = cms.EDAnalyzer("PFMETPlotsExample",
     MetAlgorithm  = cms.string("pfMEtMVA"),
-    HistoFileName = cms.string('PFMetMVAPlotsExample'+PlotSuffix+'.root'),
-    useRecoil     = cms.bool(False),
+    HistoFileName = cms.string('PFMVAMetPlotsExample'+PlotSuffix+'.root'),
+    useRecoil     = cms.bool(True),
+    recoilLeptons = cms.string("isomuons")                           
+)
+
+#############   PFMet Type 1 correction ############
+process.PFMetType1 = cms.EDAnalyzer("PFMETPlotsExample",
+    MetAlgorithm  = cms.string("pfMetT1"),
+    HistoFileName = cms.string('PFMetT1PlotsExample'+PlotSuffix+'.root'),
+    useRecoil     = cms.bool(True),
     recoilLeptons = cms.string("isomuons")                           
 )
 
@@ -246,10 +289,11 @@ process.MVAMet = cms.EDAnalyzer("PFMETPlotsExample",
 
 ##process.myseq = cms.Sequence(process.calo*process.pf*process.jpt*process.gen)
 process.myseq = cms.Sequence(process.ak5PFJetsCorr* process.pileupJetIdProducer*  process.pfMEtMVAsequence * #process.noPileUpPFMEtSequence *
-                             process.pf * process.gen  * process.pfUncorr * 
+#                             process.MetFilter *
+                             process.pf *process.pfpuid* process.gen  * process.pfUncorr * 
                              process.tightPFJetsPFlow * process.pfTight*  
                              process.ca * process.caPruned * 
-                             #process.correctionTermsPfMetType1Type2*process.pfMetT1*
+#                             process.correctionTermsPfMetType1Type2*process.pfMetT1*process.PFMetType1*
                              process.caloMet*process.PFMet * process.MVAMet #* process.NoPUMet
                              )
   

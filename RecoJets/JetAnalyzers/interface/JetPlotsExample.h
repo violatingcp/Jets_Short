@@ -29,12 +29,14 @@ class JetPlotsExample : public edm::EDAnalyzer
        /////// Jet algorithm: it can be any Calo, Gen or PF algorithm //////
        std::string JetAlgorithm;
        /////// PU Jet Id  //////
-       edm::InputTag  PUJetIdDisc;
-       edm::InputTag  PUJetId;
+       edm::InputTag  PUJetIdDisc;  //Discriminator
+       edm::InputTag  PUJetId;      //Id Flag
        /////// Histogram where the plots are stored //////////////////////// 
        std::string HistoFileName;
        /////// Number of jets used for the plots /////////////////////////// 
        int NJets;    
+       /////// Miniumum Pt of the jets for the plots /////////////////////////// 
+       double JetPtMin;    
        /////// Jet correction levels used for the plots /////////////////////////// 
        bool        useJecLevels;
        std::string jecLevels;
