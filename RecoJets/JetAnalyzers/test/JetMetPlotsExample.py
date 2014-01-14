@@ -25,7 +25,7 @@ isMC = True
 ##                         |___/                                   
 
 NJetsToKeep = 2
-JetPtMin    = 0
+JetPtMin    = 20
 UseCHS=''
 #UseCHS='CHS'
 CaloJetCollection = 'ak5CaloJets'
@@ -146,7 +146,7 @@ process.pfpuid = cms.EDAnalyzer("PFJetPlotsExample",
     PUJetDiscriminant = cms.InputTag("pileupJetIdProducer","fullDiscriminant"),
     PUJetId           = cms.InputTag("pileupJetIdProducer","fullId"),
     JetPtMin          = cms.double(JetPtMin),                          
-    PassPUId          = cms.bool(False)                          
+    PassPUId          = cms.bool(True)                          
 )
 #############   PF Jets, Tight Jet ID  ################
 process.pfTight = cms.EDAnalyzer("PFJetPlotsExample",
