@@ -6,6 +6,7 @@
 #define JetPlotsExample_h
 #include <TH1.h>
 #include <TFile.h>
+#include <TTree.h>
 #include "TNamed.h"
 #include <vector>
 #include <map>
@@ -31,6 +32,8 @@ class JetPlotsExample : public edm::EDAnalyzer
        /////// PU Jet Id  //////
        edm::InputTag  PUJetIdDisc;  //Discriminator
        edm::InputTag  PUJetId;      //Id Flag
+       ////// Require PU Id
+       bool PassPUId;
        /////// Histogram where the plots are stored //////////////////////// 
        std::string HistoFileName;
        /////// Number of jets used for the plots /////////////////////////// 
@@ -40,5 +43,8 @@ class JetPlotsExample : public edm::EDAnalyzer
        /////// Jet correction levels used for the plots /////////////////////////// 
        bool        useJecLevels;
        std::string jecLevels;
+       ////// TTree of all teh variables     ////
+       TTree *fTree;
+       float *fVariables;
    };
 #endif

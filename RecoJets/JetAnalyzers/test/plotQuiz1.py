@@ -50,7 +50,8 @@ f1 = TFile(options.inputFile1)
 
 
 hists = [
-    'JetArea',	
+    'JetArea',
+    'JetMass',	
     'JetEta',
     'JetPhi',	
     'JetPt',

@@ -18,6 +18,7 @@ METPlotsExample<MET>::METPlotsExample(edm::ParameterSet const& cfg)
   HistoFileName = cfg.getParameter<std::string> ("HistoFileName");
   useRecoil     = cfg.getParameter<bool>        ("useRecoil");  
   recoilLeptons = cfg.getParameter<std::string> ("recoilLeptons"); 
+  fVariables = new float[100];
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 template<class MET>
@@ -25,25 +26,36 @@ void METPlotsExample<MET>::beginJob()
 {
   TString hname;
   m_file = new TFile(HistoFileName.c_str(),"RECREATE"); 
+  fTree = new TTree("Tree","Tree");
+  int lIndex = 0;
   /////////// Booking histograms //////////////////////////
   hname = "MET";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,0,200);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "METPhi";
   m_HistNames1D[hname] = new TH1F(hname,hname,40,-M_PI,M_PI);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "METX";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "METY";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,-100,100);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "sumEt";
   m_HistNames1D[hname] = new TH1F(hname,hname,50,0,3000);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "UPara";
   m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,200);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "UPerp";
   m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,100);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "UParaPlusPt";
   m_HistNames1D[hname] = new TH1F(hname,hname,20,-100,100);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
   hname = "Response";
   m_HistNames1D[hname] = new TH1F(hname,hname,10,-0.5,2);
+  lIndex++;   fTree->Branch(hname.Data(),&fVariables[lIndex-1],(hname+"/F").Data());
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 template<class MET>
@@ -88,14 +100,19 @@ void METPlotsExample<MET>::analyze(edm::Event const& evt, edm::EventSetup const&
   for (i_met = METs->begin();  i_met != endpmets;  ++i_met) {
     hname = "MET";
     FillHist1D(hname,(*i_met).pt()  );   
+    fVariables[0] = (*i_met).pt();
     hname = "METPhi";
     FillHist1D(hname,(*i_met).phi());
+    fVariables[1] = (*i_met).phi();
     hname = "METX";
     FillHist1D(hname,(*i_met).pt()*cos((*i_met).phi()));
+    fVariables[2] = (*i_met).pt()*cos((*i_met).phi());
     hname = "METY";
     FillHist1D(hname,(*i_met).pt()*sin((*i_met).phi()));
+    fVariables[3] = (*i_met).pt()*sin((*i_met).phi());
     hname = "sumEt";
     FillHist1D(hname,(*i_met).sumEt());
+    fVariables[4] = (*i_met).sumEt();
     TLorentzVector pU;
     pU.SetPtEtaPhiM(i_met->pt(),0.,i_met->phi(),0.);
     pU+=recoil;
@@ -104,13 +121,18 @@ void METPlotsExample<MET>::analyze(edm::Event const& evt, edm::EventSetup const&
     if(deltaPhi < -M_PI) deltaPhi += 2.*M_PI;
     hname = "UPara";
     FillHist1D(hname,pU.Pt()*cos(deltaPhi));
+    fVariables[5] = pU.Pt()*cos(deltaPhi);
     hname = "UPerp";
     FillHist1D(hname,pU.Pt()*sin(deltaPhi));
+    fVariables[6] = pU.Pt()*sin(deltaPhi);
     hname = "UParaPlusPt";
     FillHist1D(hname,pU.Pt()*cos(deltaPhi)-recoil.Pt());
+    fVariables[7] = pU.Pt()*cos(deltaPhi)-recoil.Pt();
     hname = "Response";
     if(recoil.Pt() > 40) FillHist1D(hname,(pU.Pt()*cos(deltaPhi)/recoil.Pt()));
+    fVariables[8] = (pU.Pt()*cos(deltaPhi)/recoil.Pt());
     index++;
+    fTree->Fill();
   }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +143,7 @@ void METPlotsExample<MET>::endJob()
   if (m_file !=0) 
     {
       m_file->cd();
+      fTree->Write();
       for (std::map<TString, TH1*>::iterator hid = m_HistNames1D.begin(); hid != m_HistNames1D.end(); hid++)
         hid->second->Write();
       delete m_file;

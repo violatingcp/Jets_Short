@@ -125,16 +125,18 @@ process.calo = cms.EDAnalyzer("CaloJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
     PUJetId           = cms.InputTag(""),
-    JetPtMin          = cms.double(JetPtMin)                          
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                          
 )
 #############   PF Jets    ###########################
 process.pf = cms.EDAnalyzer("PFJetPlotsExample",
     JetAlgorithm  = cms.string(PFJetCollectionCorr),
     HistoFileName = cms.string('PFJetPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
-    PUJetDiscriminant = cms.InputTag(""),
-    PUJetId           = cms.InputTag(""),
-    JetPtMin          = cms.double(JetPtMin)                          
+    PUJetDiscriminant = cms.InputTag("pileupJetIdProducer","fullDiscriminant"),
+    PUJetId           = cms.InputTag("pileupJetIdProducer","fullId"),
+    JetPtMin          = cms.double(JetPtMin),                          
+    PassPUId          = cms.bool(False)                          
 )
 #############   PF Jets w/PUJet Id   ###########################
 process.pfpuid = cms.EDAnalyzer("PFJetPlotsExample",
@@ -143,16 +145,18 @@ process.pfpuid = cms.EDAnalyzer("PFJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag("pileupJetIdProducer","fullDiscriminant"),
     PUJetId           = cms.InputTag("pileupJetIdProducer","fullId"),
-    JetPtMin          = cms.double(JetPtMin)                          
+    JetPtMin          = cms.double(JetPtMin),                          
+    PassPUId          = cms.bool(False)                          
 )
 #############   PF Jets, Tight Jet ID  ################
 process.pfTight = cms.EDAnalyzer("PFJetPlotsExample",
     JetAlgorithm  = cms.string(PFJetCollectionTight),
     HistoFileName = cms.string('PFJetTightPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
-    PUJetDiscriminant = cms.InputTag(""),#pileupJetIdProducer","fullDiscriminant"),
-    PUJetId           = cms.InputTag(""),#pileupJetIdProducer","fullId")                          
-    JetPtMin          = cms.double(JetPtMin)                          
+    PUJetDiscriminant = cms.InputTag(""),
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                          
 )
 
 #############   PF Jets, No Corrections    ###########
@@ -161,9 +165,10 @@ process.pfUncorr = cms.EDAnalyzer("PFJetPlotsExample",
     HistoFileName = cms.string('PFJetUncorrPlotsExample'+PlotSuffix+'.root'),
     NJets         = cms.int32(NJetsToKeep),
     jecLevels     = cms.string("Uncorrected"),
-    PUJetDiscriminant = cms.InputTag(""),#pileupJetIdProducer","fullDiscriminant"),
-    PUJetId           = cms.InputTag(""),#pileupJetIdProducer","fullId")
-    JetPtMin          = cms.double(JetPtMin)                                                            
+    PUJetDiscriminant = cms.InputTag(""),
+    PUJetId           = cms.InputTag(""),
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                          
 )
 
 
@@ -175,7 +180,8 @@ process.jpt = cms.EDAnalyzer("JPTJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
     PUJetId           = cms.InputTag(""),
-    JetPtMin          = cms.double(JetPtMin)                          
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                          
 )
 #############   Gen Jets   ###########################
 process.gen = cms.EDAnalyzer("GenJetPlotsExample",
@@ -184,7 +190,8 @@ process.gen = cms.EDAnalyzer("GenJetPlotsExample",
      NJets         = cms.int32(NJetsToKeep),
      PUJetDiscriminant = cms.InputTag(""),
      PUJetId           = cms.InputTag(""),
-     JetPtMin          = cms.double(JetPtMin)                          
+     JetPtMin          = cms.double(JetPtMin),
+     PassPUId          = cms.bool(False)                          
 )
 
 #############   Cambridge-Aachen Jets R=0.8 ###########################
@@ -194,7 +201,8 @@ process.ca = cms.EDAnalyzer("PFJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
     PUJetId           = cms.InputTag(""),                          
-    JetPtMin          = cms.double(JetPtMin)                          
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                          
 )
 
 
@@ -205,7 +213,8 @@ process.caPruned = cms.EDAnalyzer("PFJetPlotsExample",
     NJets         = cms.int32(NJetsToKeep),
     PUJetDiscriminant = cms.InputTag(""),
     PUJetId           = cms.InputTag(""),
-    JetPtMin          = cms.double(JetPtMin)                          
+    JetPtMin          = cms.double(JetPtMin),
+    PassPUId          = cms.bool(False)                                                            
 )
 
 ##   _   _        _     

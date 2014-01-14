@@ -2,10 +2,11 @@
 // Description:  Example of simple EDAnalyzer for jets.
 // Author: K. Kousouris
 // Date:  25 - August - 2008
-#ifndef JetPlotsExample_h
-#define JetPlotsExample_h
+#ifndef METPlotsExample_h
+#define METPlotsExample_h
 #include <TH1.h>
 #include <TFile.h>
+#include <TTree.h>
 #include "TNamed.h"
 #include <vector>
 #include <map>
@@ -33,5 +34,8 @@ class METPlotsExample : public edm::EDAnalyzer
        bool useRecoil;
        /////// Histogram where the plots are stored //////////////////////// 
        std::string HistoFileName;
+       ////// TTree of all teh variables     ////
+       TTree *fTree;
+       float *fVariables;
    };
 #endif

@@ -54,7 +54,8 @@ f2 = TFile(options.inputFile2)
 f3 = TFile(options.inputFile3)
 
 hists = [
-    'JetArea',	
+    'JetArea',
+    'JetMass',	
     ]
 
 outhists = []
